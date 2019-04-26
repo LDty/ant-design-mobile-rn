@@ -305,7 +305,42 @@ class Carousel extends React.Component<CarouselProps, CarouselState> {
       afterChange(selectedIndex);
     }
   };
+  scrollBeforePage = () => {
+    const { isScrolling, selectedIndex, width, height } = this.state;
+    const { children, infinite, vertical } = this.props;
+    const count = this.getChildrenCount(children);
+    if (isScrolling || count < 2) {
+      return;
+    }
 
+    const diff = (infinite ? 1 : 0) + selectedIndex - 1;
+
+    if (vertical) {
+      // tslint:disable-next-line:no-unused-expression
+      this.scrollviewRef &&
+        this.scrollviewRef.scrollTo({ x: 0, y: diff * height });
+    } else {
+      // tslint:disable-next-line:no-unused-expression
+      this.scrollviewRef &&
+        this.scrollviewRef.scrollTo({ x: diff * width, y: 0 });
+    }
+
+    this.setState({
+      isScrolling: true,
+      autoplayEnd: false,
+    });
+
+    // trigger onScrollEnd manually in android
+    if (Platform.OS === 'android') {
+      this.androidScrollEndTimer = setTimeout(() => {
+        this.onScrollEnd({
+          nativeEvent: {
+            position: diff,
+          },
+        } as any);
+      }, 0);
+    }
+  };
   scrollNextPage = () => {
     const { isScrolling, selectedIndex, width, height } = this.state;
     const { children, infinite, vertical } = this.props;
